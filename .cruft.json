@@ -1,0 +1,23 @@
+{
+  "template": "/Volumes/Libraries/Music Library/src/cookiecutter-hypermodern-python",
+  "commit": "e81b945f1028259dd6ed3b9511de203872c83978",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "beets_plugin_name": "alias",
+      "project_name": "beets-alias",
+      "package_name": "beetsplug.alias",
+      "friendly_name": "Alias Plugin for Beets",
+      "camel_case": "Alias",
+      "author": "Christopher Larson",
+      "email": "kergoth@gmail.com",
+      "github_user": "kergoth",
+      "version": "0.9.0",
+      "copyright_year": "2024",
+      "license": "MIT",
+      "development_status": "Development Status :: 4 - Beta",
+      "_template": "/Volumes/Libraries/Music Library/src/cookiecutter-hypermodern-python"
+    }
+  },
+  "directory": null
+}
