@@ -258,3 +258,35 @@ class AliasPluginTest(BeetsTestCase):
         with self.assertRaises(SystemExit) as exc:
             self.run_with_output("fail")
             self.assertEqual(exc.exception.code, 2)
+
+    def test_alias_succeeded_event(self) -> None:
+        """Test firing of alias_succeeded event."""
+        self._setup_config(
+            {"from_path": False, "aliases": {"hello": "!echo hello, {0}"}}
+        )
+
+        events: List[Any] = []
+        self.plugin.register_listener(
+            "alias_succeeded", lambda **kwargs: events.append(kwargs)
+        )
+        self.run_with_output("hello", "world")
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["alias"], "hello")
+        self.assertEqual(events[0]["command"], ["echo", "hello,", "world"])
+
+    def test_alias_failed_event(self) -> None:
+        """Test firing of alias_failed event."""
+        self._setup_config({"from_path": False, "aliases": {"fail": "!false"}})
+
+        events: List[Any] = []
+        self.plugin.register_listener(
+            "alias_failed", lambda **kwargs: events.append(kwargs)
+        )
+        with self.assertRaises(SystemExit):
+            self.run_with_output("fail")
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["alias"], "fail")
+        self.assertEqual(events[0]["command"], ["false"])
+        self.assertEqual(events[0]["exitcode"], 1)
