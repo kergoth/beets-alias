@@ -135,4 +135,3 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 
 [license]: https://github.com/kergoth/beets-alias/blob/main/LICENSE
 [contributor guide]: https://github.com/kergoth/beets-alias/blob/main/CONTRIBUTING.md
-[command-line reference]: https://beets-alias.readthedocs.io/en/latest/usage.html

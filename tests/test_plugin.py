@@ -13,8 +13,8 @@ from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
 from beets.plugins import send
 from beets.test.helper import TestHelper  # type: ignore
-from beets.ui import UserError
-from confuse.exceptions import ConfigError
+from beets.ui import UserError  # type: ignore
+from confuse.exceptions import ConfigError  # type: ignore
 
 
 class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
