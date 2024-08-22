@@ -3,7 +3,6 @@
 By default, also checks $PATH for beet-* and makes those available as well.
 
 Example:
-
     alias:
       from_path: yes # Default
       aliases:
@@ -15,21 +14,23 @@ Example:
           help: do something or other
 """
 
-from __future__ import division, absolute_import, print_function
-
-import confuse
 import glob
 import optparse
 import os
 import shlex
-import six
 import subprocess
 import sys
 
-from beets import config, plugins, ui
+import confuse
+import six
+from beets import config
+from beets import plugins
+from beets import ui
 from beets.plugins import BeetsPlugin
-from beets.ui import Subcommand, print_
+from beets.ui import Subcommand
+from beets.ui import print_
 from beets.ui.commands import default_commands
+
 
 if sys.version_info >= (3, 3):
     from collections import abc
@@ -46,7 +47,11 @@ class NoOpOptionParser(optparse.OptionParser):
 
 class AliasCommand(Subcommand):
     def __init__(self, alias, command, log=None, help=None):
-        super(AliasCommand, self).__init__(alias, help=help or command, parser=NoOpOptionParser(add_help_option=False, description=help or command))
+        super(AliasCommand, self).__init__(
+            alias,
+            help=help or command,
+            parser=NoOpOptionParser(add_help_option=False, description=help or command),
+        )
 
         self.alias = alias
         self.log = log
@@ -74,16 +79,16 @@ class AliasCommand(Subcommand):
                 del args[i]
 
         # search for token {} and replace it with the rest of the arguments, if it exists or append otherwise
-        if '{}' in command_args:
+        if "{}" in command_args:
             for i in range(len(command_args) - 1, -1, -1):
-                if command_args[i] == '{}':
-                    command_args[i:i + 1] = args
+                if command_args[i] == "{}":
+                    command_args[i : i + 1] = args
         else:
             command_args = command_args + args
 
         args = command_args
 
-        if command.startswith('!'):
+        if command.startswith("!"):
             command = command[1:]
             argv = [command] + args
 
@@ -99,20 +104,21 @@ class AliasCommand(Subcommand):
                 if cmdname == subcommand.name or cmdname in subcommand.aliases:
                     break
             else:
-                raise ui.UserError(u"unknown command '{0}'".format(cmdname))
+                raise ui.UserError(f"unknown command '{cmdname}'")
 
             suboptions, subargs = subcommand.parse_args(argv[1:])
+
             def run_func():
                 return subcommand.func(lib, suboptions, subargs)
 
         if self.log:
-            self.log.debug('Running {}', subprocess.list2cmdline(argv))
+            self.log.debug("Running {}", subprocess.list2cmdline(argv))
 
         try:
             run_func()
         except subprocess.CalledProcessError as exc:
             self.failed(lib, self.alias, command, args, exc.returncode)
-            plugins.send('cli_exit', lib=lib)
+            plugins.send("cli_exit", lib=lib)
             lib._close()
             sys.exit(exc.returncode)
         except SystemExit as exc:
@@ -123,7 +129,9 @@ class AliasCommand(Subcommand):
             self.failed(lib, self.alias, command, args, message=str(exc))
             raise
 
-        plugins.send('alias_succeeded', lib=lib, alias=self.alias, command=command, args=args)
+        plugins.send(
+            "alias_succeeded", lib=lib, alias=self.alias, command=command, args=args
+        )
 
     def failed(self, lib, alias, command, args, exitcode=None, message=""):
         plugins.send(
@@ -133,13 +141,20 @@ class AliasCommand(Subcommand):
             command=command,
             args=args,
             exitcode=exitcode,
-            message=message
+            message=message,
         )
         if self.log:
-            exitmsg = " with {}".format(exitcode) if exitcode else ""
+            exitmsg = f" with {exitcode}" if exitcode else ""
             if message:
                 message = ": " + message
-            self.log.debug(u'command `{}{}` failed{}{}', command, ' ' + subprocess.list2cmdline(args) if args else '', exitmsg, message)
+            self.log.debug(
+                "command `{}{}` failed{}{}",
+                command,
+                " " + subprocess.list2cmdline(args) if args else "",
+                exitmsg,
+                message,
+            )
+
 
 class AliasPlugin(BeetsPlugin):
     """Support for beets command aliases, not unlike git."""
@@ -147,10 +162,12 @@ class AliasPlugin(BeetsPlugin):
     def __init__(self):
         super(AliasPlugin, self).__init__()
 
-        self.config.add({
-            'from_path': True,
-            'aliases': {},
-        })
+        self.config.add(
+            {
+                "from_path": True,
+                "aliases": {},
+            }
+        )
 
     def get_command(self, alias, command, help=None):
         """Create a Subcommand instance for the specified alias."""
@@ -158,49 +175,62 @@ class AliasPlugin(BeetsPlugin):
 
     def get_path_commands(self):
         """Create subcommands for beet-* scripts in $PATH."""
-        for path in os.getenv('PATH', '').split(':'):
-            cmds = glob.glob(os.path.join(path, 'beet-*'))
+        for path in os.getenv("PATH", "").split(":"):
+            cmds = glob.glob(os.path.join(path, "beet-*"))
             for cmd in cmds:
                 if os.access(cmd, os.X_OK):
                     command = os.path.basename(cmd)
                     alias = command[5:]
-                    yield (alias, self.get_command(alias, '!' + command, u'Run external command `{0}`'.format(command)))
+                    yield (
+                        alias,
+                        self.get_command(
+                            alias, "!" + command, f"Run external command `{command}`"
+                        ),
+                    )
 
     def cmd_alias(self, lib, opts, args, commands):
         """Print the available alias commands."""
         for alias, command in sorted(commands.items()):
-            print_(u'{0}: {1}'.format(alias, command))
+            print_(f"{alias}: {command}")
 
     def commands(self):
         """Add the alias commands."""
-        if self.config['from_path'].get(bool):
+        if self.config["from_path"].get(bool):
             commands = dict(self.get_path_commands())
         else:
             commands = {}
 
-        for path, subview in [('alias.aliases', self.config['aliases']), ('aliases', config['aliases'])]:
+        for path, subview in [
+            ("alias.aliases", self.config["aliases"]),
+            ("aliases", config["aliases"]),
+        ]:
             for alias in subview.keys():
                 if alias in commands:
-                    raise confuse.ConfigError(u'alias {1} was specified multiple times'.format(alias))
+                    raise confuse.ConfigError(
+                        "alias {1} was specified multiple times".format()
+                    )
 
                 command = subview[alias].get()
                 if isinstance(command, six.text_type):
                     commands[alias] = self.get_command(alias, command)
                 elif isinstance(command, abc.Mapping):
-                    command_text = command.get('command')
+                    command_text = command.get("command")
                     if not command_text:
-                        raise confuse.ConfigError(u'{0}.{1}.command not found'.format(path, alias))
-                    help_text = command.get('help', command_text)
+                        raise confuse.ConfigError(f"{path}.{alias}.command not found")
+                    help_text = command.get("help", command_text)
                     commands[alias] = self.get_command(alias, command_text, help_text)
                 else:
-                    raise confuse.ConfigError(u'{0}.{1} must be a string or single-element mapping'.format(path, alias))
+                    raise confuse.ConfigError(
+                        f"{path}.{alias} must be a string or single-element mapping"
+                    )
 
-        if 'alias' in commands:
-            raise ui.UserError(u'alias `alias` is reserved for the alias plugin')
+        if "alias" in commands:
+            raise ui.UserError("alias `alias` is reserved for the alias plugin")
 
-        alias = Subcommand('alias',
-                           help=u'Print the available alias commands.')
+        alias = Subcommand("alias", help="Print the available alias commands.")
         alias_commands = dict((a, c.command) for a, c in commands.items())
-        alias.func = lambda lib, opts, args: self.cmd_alias(lib, opts, args, alias_commands)
-        commands['alias'] = alias
+        alias.func = lambda lib, opts, args: self.cmd_alias(
+            lib, opts, args, alias_commands
+        )
+        commands["alias"] = alias
         return commands.values()
