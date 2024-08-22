@@ -55,6 +55,10 @@ class AliasPluginTest(BeetsTestCase):
             f.write("#!/bin/sh\necho 'Hello, world from beet-testcommand!'\n")
         testcommand.chmod(0o755)
 
+        testcommand2 = Path(os.fsdecode(self.temp_dir)) / "beet-testcommand2"
+        with open(testcommand2, "w") as f:
+            f.write("#!/bin/sh\necho 'Hello, world from beet-testcommand2!'\n")
+
         self.load_plugin()
         self.config_path = Path(os.fsdecode(self.temp_dir)) / "config.yaml"
 
@@ -186,6 +190,17 @@ class AliasPluginTest(BeetsTestCase):
 
         output = self.run_with_output("testcommand")
         self.assertEqual(output, "Hello, world from beet-testcommand!\n")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Skipping test on Windows")
+    def test_from_path_ignore_noexec(self) -> None:
+        """Test that alias will ignore non-executable external commands from PATH."""
+        self._setup_config({"from_path": True})
+
+        alias_output = self.run_with_output("alias")
+        self.assertNotIn("testcommand2", alias_output)
+
+        with self.assertRaisesRegex(UserError, "unknown command 'testcommand2'"):
+            self.run_with_output("testcommand2")
 
     def test_duplicate_alias(self) -> None:
         """Test alias with duplicate name."""
