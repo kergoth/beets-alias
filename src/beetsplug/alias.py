@@ -35,6 +35,9 @@ from beets.ui import print_
 from beets.ui.commands import default_commands
 
 
+EXIT_STATUS_DATABASE_CHANGED = 8
+
+
 class NoOpOptionParser(optparse.OptionParser):
     """A dummy option parser that doesn't do anything."""
 
@@ -200,15 +203,15 @@ class AliasCommand(Subcommand):
 
     def failed(self, lib, alias, command, exitcode=None, message=""):
         """Log the failure and send a plugin event."""
-        plugins.send(
-            "alias_failed",
-            lib=lib,
-            alias=self.name,
-            command=command,
-            exitcode=exitcode,
-            message=message,
-        )
-        if self.log:
+        if exitcode == EXIT_STATUS_DATABASE_CHANGED:
+            if self.log:
+                self.log.debug(
+                    "command `{0}` exited with {1}, triggering database change event",
+                    command,
+                    exitcode,
+                )
+            plugins.send("database_change", lib=lib, model=None)
+        elif self.log:
             exitmsg = f" with {exitcode}" if exitcode else ""
             if message:
                 message = ": " + message
@@ -218,6 +221,15 @@ class AliasCommand(Subcommand):
                 exitmsg,
                 message,
             )
+
+        plugins.send(
+            "alias_failed",
+            lib=lib,
+            alias=self.name,
+            command=command,
+            exitcode=exitcode,
+            message=message,
+        )
 
 
 class BeetsCommand(AliasCommand):
