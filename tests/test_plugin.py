@@ -60,7 +60,7 @@ class AliasPluginTest(BeetsTestCase):
             config = {
                 "from_path": False,
                 "aliases": {
-                    "hello": '!echo "Hello {0}, I\'m a plugin!"',
+                    "hello": '!echo "Hello {0}, I\'m a plugin"',
                     "bye": '!echo "Goodbye!"',
                     "echo": "!echo",
                     "ls-alias": "ls",
@@ -78,7 +78,7 @@ class AliasPluginTest(BeetsTestCase):
     def test_alias_command(self) -> None:
         """Test alias subcommand."""
         config = self._setup_config()
-        output = self.run_with_output("alias")
+        output = self.run_with_output("alias").splitlines()
         for alias, command in config["aliases"].items():
             self.assertIn(f"{alias}: {command}", output)
 
@@ -98,35 +98,35 @@ class AliasPluginTest(BeetsTestCase):
         """Test alias run with parameter substitution."""
         self._setup_config()
         output = self.run_with_output("hello", "world")
-        self.assertIn("Hello world, I'm a plugin!", output)
+        self.assertIn("Hello world, I'm a plugin", output)
 
     def test_alias_run_external_param_subst_multiple_append(self) -> None:
         """Test alias run with multiple parameter substitution, appending remainder."""
         self._setup_config()
         output = self.run_with_output("hello", "world", "beets")
-        self.assertIn("Hello world, I'm a plugin! beets", output)
+        self.assertIn("Hello world, I'm a plugin beets", output)
 
     def test_alias_run_external_param_subst_multiple_explicit(self) -> None:
         """Test alias run with multiple parameter substitution."""
         self._setup_config(
             {
                 "from_path": False,
-                "aliases": {"hello": '!echo "Hello {0}, I\'m a {1} plugin!"'},
+                "aliases": {"hello": '!echo "Hello {0}, I\'m a {1} plugin"'},
             }
         )
         output = self.run_with_output("hello", "world", "beets")
-        self.assertIn("Hello world, I'm a beets plugin!", output)
+        self.assertIn("Hello world, I'm a beets plugin", output)
 
     def test_alias_run_external_param_subst_multiple_remainder(self) -> None:
-        """Test alias run with multiple parameter substitution with explicit remainder."""
+        """Test alias run with multiple parameter substitution with remainder."""
         self._setup_config(
             {
                 "from_path": False,
-                "aliases": {"hello": '!echo "Hello {0}, I\'m a" {} "plugin!"'},
+                "aliases": {"hello": '!echo "Hello {0}, I\'m a" {} "plugin"'},
             }
         )
         output = self.run_with_output("hello", "world", "beets", "extra")
-        self.assertIn("Hello world, I'm a beets extra plugin!", output)
+        self.assertIn("Hello world, I'm a beets extra plugin", output)
 
     def test_alias_run_internal(self) -> None:
         """Test alias run internal command."""
