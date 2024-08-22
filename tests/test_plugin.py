@@ -13,6 +13,8 @@ from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
 from beets.plugins import send
 from beets.test.helper import TestHelper  # type: ignore
+from beets.ui import UserError
+from confuse.exceptions import ConfigError
 
 
 class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
@@ -41,6 +43,16 @@ class AliasPluginTest(BeetsTestCase):
     def setUp(self) -> None:
         """Set up test cases."""
         super().setUp()
+
+        os.environ["PATH"] = (
+            os.fsdecode(self.temp_dir) + os.pathsep + os.environ["PATH"]
+        )
+
+        testcommand = Path(os.fsdecode(self.temp_dir)) / "beet-testcommand"
+        with open(testcommand, "w") as f:
+            f.write("#!/bin/sh\necho 'Hello, world from beet-testcommand!'\n")
+        testcommand.chmod(0o755)
+
         self.load_plugin()
         self.config_path = Path(os.fsdecode(self.temp_dir)) / "config.yaml"
 
@@ -161,3 +173,88 @@ class AliasPluginTest(BeetsTestCase):
         self._setup_config()
         output = self.run_with_output("echo-alias", "Hello, world!")
         self.assertEqual(output, "Hello, world!\n")
+
+    def test_from_path(self) -> None:
+        """Test alias run external command from PATH."""
+        self._setup_config({"from_path": True})
+
+        alias_output = self.run_with_output("alias")
+        self.assertIn("testcommand", alias_output)
+
+        output = self.run_with_output("testcommand")
+        self.assertEqual(output, "Hello, world from beet-testcommand!\n")
+
+    def test_duplicate_alias(self) -> None:
+        """Test alias with duplicate name."""
+        self._setup_config({"from_path": False, "aliases": {"hello": "echo"}})
+        self.config["aliases"] = {"hello": "echo2"}
+
+        with self.assertRaisesRegex(
+            ConfigError, "alias hello was specified multiple times"
+        ):
+            self.run_with_output("hello")
+
+    def test_mapping_alias(self) -> None:
+        """Test alias with mapping."""
+        self._setup_config(
+            {
+                "from_path": False,
+                "aliases": {
+                    "hello": {
+                        "command": "!echo Hello",
+                        "help": "Say hello",
+                    }
+                },
+            }
+        )
+        output = self.run_with_output("hello")
+        self.assertEqual(output, "Hello\n")
+
+    def test_config_mapping_missing_command(self) -> None:
+        """Test alias with mapping missing command."""
+        self._setup_config({"from_path": False, "aliases": {"hello": {}}})
+        with self.assertRaisesRegex(ConfigError, "command not found"):
+            self.run_with_output("hello")
+
+    def test_config_invalid_alias_type(self) -> None:
+        """Test alias with invalid type."""
+        self._setup_config({"from_path": False, "aliases": {"hello": 1}})
+        with self.assertRaisesRegex(
+            ConfigError, "must be a string or single-element mapping"
+        ):
+            self.run_with_output("hello")
+
+    def test_config_alias_alias(self) -> None:
+        """Test alias named alias."""
+        self._setup_config(
+            {
+                "from_path": False,
+                "aliases": {
+                    "alias": "echo",
+                },
+            }
+        )
+        with self.assertRaisesRegex(
+            UserError, "alias `alias` is reserved for the alias plugin"
+        ):
+            self.run_with_output("alias")
+
+    def test_alias_unknown_command(self) -> None:
+        """Test alias to an missing beets subcommand."""
+        self._setup_config({"from_path": False, "aliases": {"unknown": "missing"}})
+        with self.assertRaisesRegex(UserError, "unknown command 'missing'"):
+            self.run_with_output("unknown")
+
+    def test_alias_external_failed(self) -> None:
+        """Test alias run external command which fails."""
+        self._setup_config({"from_path": False, "aliases": {"fail": "!false"}})
+        with self.assertRaises(SystemExit) as exc:
+            self.run_with_output("fail")
+            self.assertEqual(exc.exception.code, 1)
+
+    def test_alias_internal_failed(self) -> None:
+        """Test alias run internal command which fails."""
+        self._setup_config({"from_path": False, "aliases": {"fail": "config -x"}})
+        with self.assertRaises(SystemExit) as exc:
+            self.run_with_output("fail")
+            self.assertEqual(exc.exception.code, 2)

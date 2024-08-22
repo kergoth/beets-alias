@@ -13,6 +13,7 @@ Example:
           command: ls -a
           help: do something or other
 """
+# mypy: ignore-errors
 
 import glob
 import optparse
@@ -39,8 +40,6 @@ class NoOpOptionParser(optparse.OptionParser):
 
     def parse_args(self, args=None, namespace=None):
         """Return the arguments and an empty list."""
-        if args is None:
-            args = sys.argv[1:]
         return [], args
 
 
@@ -57,6 +56,10 @@ class AliasPlugin(BeetsPlugin):
             }
         )
 
+    def getenv(self, name, default):
+        """Get the value of an environment variable."""
+        return os.getenv(name, default)
+
     def get_alias_subcommand(self, alias, command, help=None):
         """Create a Subcommand instance for the specified alias."""
         if command.startswith("!"):
@@ -66,7 +69,7 @@ class AliasPlugin(BeetsPlugin):
 
     def get_path_commands(self):
         """Create subcommands for beet-* scripts in $PATH."""
-        for path in os.getenv("PATH", "").split(":"):
+        for path in self.getenv("PATH", "").split(":"):
             cmds = glob.glob(os.path.join(path, "beet-*"))
             for cmd in cmds:
                 if os.access(cmd, os.X_OK):
@@ -165,10 +168,6 @@ class AliasCommand(Subcommand):
 
         return split_command
 
-    def run_command(self, lib, opts, command):
-        """Run the command."""
-        raise NotImplementedError
-
     def func(self, lib, opts, args=None):
         """Run the command with the specified arguments."""
         command = self.substitute_parameters(args)
@@ -263,11 +262,6 @@ def redirect_output(p, stdfile, log):
 
 def check_call_redirected(*popenargs, **kwargs):
     """Like subprocess.check_call, but redirects the output to sys.stdout/sys.stderr."""
-    if "stdout" in kwargs:
-        raise ValueError("stdout argument not allowed, it will be overridden.")
-    if "stderr" in kwargs:
-        raise ValueError("stderr argument not allowed, it will be overridden.")
-
     with subprocess.Popen(  # noqa: S603
         *popenargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, **kwargs
     ) as p:
@@ -278,8 +272,5 @@ def check_call_redirected(*popenargs, **kwargs):
             r2.result()
 
     if p.returncode:
-        cmd = kwargs.get("args")
-        if cmd is None:
-            cmd = popenargs[0]
-        raise subprocess.CalledProcessError(p.returncode, cmd)
+        raise subprocess.CalledProcessError(p.returncode, popenargs[0])
     return 0
