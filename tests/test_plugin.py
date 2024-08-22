@@ -1,6 +1,7 @@
 """Tests for the 'alias' plugin."""
 
 import os
+import sys
 import unittest
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,7 @@ from typing import List
 from typing import Optional
 
 import beets.plugins  # type: ignore
+import pytest
 from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
 from beets.plugins import send
@@ -174,7 +176,8 @@ class AliasPluginTest(BeetsTestCase):
         output = self.run_with_output("echo-alias", "Hello, world!")
         self.assertEqual(output, "Hello, world!\n")
 
-    def test_from_path(self) -> None:
+    @pytest.mark.skipif(sys.platform == "win32", reason="Skipping test on Windows")
+    def test_from_path(self) -> None:  # type: ignore
         """Test alias run external command from PATH."""
         self._setup_config({"from_path": True})
 
