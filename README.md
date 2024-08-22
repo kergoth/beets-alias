@@ -121,12 +121,14 @@ please [file an issue] along with a detailed description.
 
 ## Credits
 
+Thanks to the project [contributors][], whose work is much appreciated.
 This project is a plugin for the [beets][] project, and would not exist without that fantastic project.
 This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter] template.
 
 [@cjolowicz]: https://github.com/cjolowicz
 [hypermodern python cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
 [file an issue]: https://github.com/kergoth/beets-alias/issues
+[contributors]: https://github.com/kergoth/beets-alias/graphs/contributors
 [beets]: https://beets.readthedocs.io/en/stable/index.html
 [other plugins]: https://beets.readthedocs.io/en/stable/plugins/index.html#other-plugins
 [using plugins]: https://beets.readthedocs.io/en/stable/plugins/index.html#using-plugins
