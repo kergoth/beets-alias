@@ -21,6 +21,7 @@ import shlex
 import subprocess
 import sys
 from collections import abc
+from concurrent.futures import ThreadPoolExecutor
 
 import confuse
 import six
@@ -38,6 +39,40 @@ class NoOpOptionParser(optparse.OptionParser):
         if args is None:
             args = sys.argv[1:]
         return [], args
+
+
+def redirect_output(p, stdfile, log):
+    """Redirect data from stdfile to log while waiting for p to finish."""
+    while p.poll() is None:
+        log.write(stdfile.readline())
+        log.flush()
+
+    # Write the rest from the buffer
+    log.write(stdfile.read())
+
+
+def check_call_redirected(*popenargs, **kwargs):
+    """Like subprocess.check_call, but redirects the output to sys.stdout/sys.stderr."""
+    if "stdout" in kwargs:
+        raise ValueError("stdout argument not allowed, it will be overridden.")
+    if "stderr" in kwargs:
+        raise ValueError("stderr argument not allowed, it will be overridden.")
+
+    with subprocess.Popen(
+        *popenargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, **kwargs
+    ) as p:
+        with ThreadPoolExecutor(2) as pool:
+            r1 = pool.submit(redirect_output, p, p.stdout, sys.stdout)
+            r2 = pool.submit(redirect_output, p, p.stderr, sys.stderr)
+            r1.result()
+            r2.result()
+
+    if p.returncode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        raise subprocess.CalledProcessError(p.returncode, cmd)
+    return 0
 
 
 class AliasCommand(Subcommand):
@@ -89,7 +124,7 @@ class AliasCommand(Subcommand):
             argv = [command, *args]
 
             def run_func():
-                return subprocess.check_call(argv)  # noqa: S603
+                return check_call_redirected(argv)
         else:
             argv = [command, *args]
             cmdname = argv[0]
