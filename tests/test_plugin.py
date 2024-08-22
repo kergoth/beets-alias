@@ -293,3 +293,17 @@ class AliasPluginTest(BeetsTestCase):
         self.assertEqual(events[0]["alias"], "fail")
         self.assertEqual(events[0]["command"], ["false"])
         self.assertEqual(events[0]["exitcode"], 1)
+
+    def test_alias_trigger_database_change(self) -> None:
+        """Test triggering of database_change event."""
+        self._setup_config({"from_path": False, "aliases": {"fail": "!sh -c 'exit 8'"}})
+
+        events: List[Any] = []
+        self.plugin.register_listener(
+            "database_change", lambda **kwargs: events.append(kwargs)
+        )
+        with self.assertRaises(SystemExit):
+            self.run_with_output("fail")
+
+        self.assertEqual(len(events), 1)
+        self.assertIsNone(events[0]["model"])
