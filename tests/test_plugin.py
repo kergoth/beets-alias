@@ -177,7 +177,7 @@ class AliasPluginTest(BeetsTestCase):
         self.assertEqual(output, "Hello, world!\n")
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Skipping test on Windows")
-    def test_from_path(self) -> None:  # type: ignore
+    def test_from_path(self) -> None:
         """Test alias run external command from PATH."""
         self._setup_config({"from_path": True})
 
