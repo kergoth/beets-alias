@@ -20,6 +20,7 @@ import os
 import shlex
 import subprocess
 import sys
+from collections import abc
 
 import confuse
 import six
@@ -32,12 +33,6 @@ from beets.ui import print_
 from beets.ui.commands import default_commands
 
 
-if sys.version_info >= (3, 3):
-    from collections import abc
-else:
-    import collections as abc
-
-
 class NoOpOptionParser(optparse.OptionParser):
     def parse_args(self, args=None, namespace=None):
         if args is None:
@@ -47,7 +42,7 @@ class NoOpOptionParser(optparse.OptionParser):
 
 class AliasCommand(Subcommand):
     def __init__(self, alias, command, log=None, help=None):
-        super(AliasCommand, self).__init__(
+        super().__init__(
             alias,
             help=help or command,
             parser=NoOpOptionParser(add_help_option=False, description=help or command),
@@ -78,7 +73,8 @@ class AliasCommand(Subcommand):
             if token_replaced:
                 del args[i]
 
-        # search for token {} and replace it with the rest of the arguments, if it exists or append otherwise
+        # search for token {} and replace it with the rest of the arguments,
+        # if it exists, or append otherwise
         if "{}" in command_args:
             for i in range(len(command_args) - 1, -1, -1):
                 if command_args[i] == "{}":
@@ -90,12 +86,12 @@ class AliasCommand(Subcommand):
 
         if command.startswith("!"):
             command = command[1:]
-            argv = [command] + args
+            argv = [command, *args]
 
             def run_func():
-                return subprocess.check_call(argv)
+                return subprocess.check_call(argv)  # noqa: S603
         else:
-            argv = [command] + args
+            argv = [command, *args]
             cmdname = argv[0]
 
             subcommands = list(default_commands)
@@ -160,7 +156,7 @@ class AliasPlugin(BeetsPlugin):
     """Support for beets command aliases, not unlike git."""
 
     def __init__(self):
-        super(AliasPlugin, self).__init__()
+        super().__init__()
 
         self.config.add(
             {
@@ -207,7 +203,7 @@ class AliasPlugin(BeetsPlugin):
             for alias in subview.keys():
                 if alias in commands:
                     raise confuse.ConfigError(
-                        "alias {1} was specified multiple times".format()
+                        f"alias {alias} was specified multiple times"
                     )
 
                 command = subview[alias].get()
