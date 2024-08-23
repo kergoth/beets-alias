@@ -336,9 +336,6 @@ class AliasPluginTest(BeetsTestCase):
         self._setup_config({"from_path": False, "aliases": {"fail": "!sh -c 'exit 8'"}})
 
         with self.assertRaises(SystemExit), self.assertFiresEvent(
-            "database_change"
-        ) as events:
+            "database_change", model=None
+        ):
             self.run_with_output("fail")
-
-        event_args = next(args for event, args in events if event == "database_change")
-        self.assertIsNone(event_args["model"])
