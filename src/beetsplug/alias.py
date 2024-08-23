@@ -149,7 +149,7 @@ class AliasPlugin(BeetsPlugin):
 class AliasCommand(Subcommand):
     """Base class for alias subcommands."""
 
-    def __init__(self, name, command, log=None, help=None):
+    def __init__(self, name, command, log, help=None):
         super().__init__(
             name,
             help=help or command,
@@ -186,8 +186,7 @@ class AliasCommand(Subcommand):
         """Run the command with the specified arguments."""
         command = self.substitute_parameters(args)
 
-        if self.log:
-            self.log.debug("Running {}", subprocess.list2cmdline(command))
+        self.log.debug("Running {}", subprocess.list2cmdline(command))
 
         try:
             self.run_command(lib, opts, command)
@@ -215,14 +214,13 @@ class AliasCommand(Subcommand):
     def failed(self, lib, alias, command, exitcode=None, message=""):
         """Log the failure and send a plugin event."""
         if exitcode == EXIT_STATUS_DATABASE_CHANGED:
-            if self.log:
-                self.log.debug(
-                    "command `{0}` exited with {1}, triggering database change event",
-                    command,
-                    exitcode,
-                )
+            self.log.debug(
+                "command `{0}` exited with {1}, triggering database change event",
+                command,
+                exitcode,
+            )
             plugins.send("database_change", lib=lib, model=None)
-        elif self.log:
+        else:
             exitmsg = f" with {exitcode}" if exitcode else ""
             if message:
                 message = ": " + message
