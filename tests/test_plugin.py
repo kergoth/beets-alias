@@ -3,9 +3,11 @@
 import os
 import sys
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import Generator
 from typing import List
 from typing import Optional
 
@@ -13,7 +15,7 @@ import beets.plugins  # type: ignore
 import pytest
 from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
-from beets.plugins import send
+from beets.plugins import send  # type: ignore
 from beets.test.helper import TestHelper  # type: ignore
 from beets.ui import UserError  # type: ignore
 from confuse.exceptions import ConfigError  # type: ignore
@@ -37,6 +39,37 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
         super().load_plugins(*plugins)
         send("pluginload")
         return find_plugins()  # type: ignore
+
+    def unregister_listener(self, event: str, func: Any) -> None:
+        """Unregister a beets plugin event listener."""
+        for i, f in enumerate(self.plugin._raw_listeners[event]):
+            if f == func:
+                self.plugin._raw_listeners[event].pop(i)
+                self.plugin.listeners[event].pop(i)
+
+    @contextmanager
+    def assertFiresEvent(  # noqa: N802
+        self, event: str, **event_args: Any
+    ) -> Generator[List[List[Any]], None, None]:
+        """Assert that a beets plugin event is fired."""
+        events: List[List[Any]] = []
+
+        def event_func(event: str = event, **args: Any) -> None:
+            events.append([event, args])
+
+        self.plugin.register_listener(event, event_func)
+        try:
+            yield events
+
+            event_names = [event for event, _ in events]
+            self.assertIn(event, event_names)
+
+            fired_args = next(args for name, args in events if name == event)
+            for name, value in event_args.items():
+                self.assertIn(name, fired_args)
+                self.assertEqual(fired_args[name], value)
+        finally:
+            self.unregister_listener(event, event_func)
 
 
 class AliasPluginTest(BeetsTestCase):
@@ -283,42 +316,29 @@ class AliasPluginTest(BeetsTestCase):
             {"from_path": False, "aliases": {"hello": "!echo hello, {0}"}}
         )
 
-        events: List[Any] = []
-        self.plugin.register_listener(
-            "alias_succeeded", lambda **kwargs: events.append(kwargs)
-        )
-        self.run_with_output("hello", "world")
-
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["alias"], "hello")
-        self.assertEqual(events[0]["command"], ["echo", "hello,", "world"])
+        with self.assertFiresEvent(
+            "alias_succeeded", alias="hello", command=["echo", "hello,", "world"]
+        ):
+            self.run_with_output("hello", "world")
 
     def test_alias_failed_event(self) -> None:
         """Test firing of alias_failed event."""
         self._setup_config({"from_path": False, "aliases": {"fail": "!false"}})
 
-        events: List[Any] = []
-        self.plugin.register_listener(
-            "alias_failed", lambda **kwargs: events.append(kwargs)
-        )
-        with self.assertRaises(SystemExit):
+        event_args = {"alias": "fail", "command": ["false"], "exitcode": 1}
+        with self.assertRaises(SystemExit), self.assertFiresEvent(
+            "alias_failed", **event_args
+        ):
             self.run_with_output("fail")
-
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["alias"], "fail")
-        self.assertEqual(events[0]["command"], ["false"])
-        self.assertEqual(events[0]["exitcode"], 1)
 
     def test_alias_trigger_database_change(self) -> None:
         """Test triggering of database_change event."""
         self._setup_config({"from_path": False, "aliases": {"fail": "!sh -c 'exit 8'"}})
 
-        events: List[Any] = []
-        self.plugin.register_listener(
-            "database_change", lambda **kwargs: events.append(kwargs)
-        )
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit), self.assertFiresEvent(
+            "database_change"
+        ) as events:
             self.run_with_output("fail")
 
-        self.assertEqual(len(events), 1)
-        self.assertIsNone(events[0]["model"])
+        event_args = next(args for event, args in events if event == "database_change")
+        self.assertIsNone(event_args["model"])
