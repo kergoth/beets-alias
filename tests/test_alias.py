@@ -21,12 +21,20 @@ from beets.ui import UserError  # type: ignore
 from confuse.exceptions import ConfigError  # type: ignore
 
 
+tests_path = Path(__file__).parent
+
+
 class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
     """TestHelper based TestCase for beets."""
 
     def setUp(self) -> None:
         """Set up test case."""
         self.setup_beets()
+        self.config["pluginpath"] = [
+            str(tests_path.parent / "src" / "beetsplug"),
+            str(tests_path / "beetsplug"),
+        ]
+        self.config["plugins"] = ["testplugin"]
 
     def tearDown(self) -> None:
         """Tear down test case."""
@@ -97,7 +105,7 @@ class AliasPluginTest(BeetsTestCase):
 
     def load_plugin(self) -> None:
         """Load alias plugin."""
-        plugins = self.load_plugins("alias")
+        plugins = self.load_plugins("testplugin", "alias")
         for plugin in plugins:
             if plugin.name == "alias":
                 self.plugin = plugin
@@ -339,3 +347,9 @@ class AliasPluginTest(BeetsTestCase):
             "database_change", model=None
         ):
             self.run_with_output("fail")
+
+    def test_alias_to_command_which_exits_explicitly(self) -> None:
+        """Test alias to a command which explicitly exits successfully ."""
+        self._setup_config({"from_path": False, "aliases": {"testalias": "testexit"}})
+
+        self.run_with_output("testalias")
