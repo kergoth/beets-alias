@@ -49,8 +49,8 @@ class NoOpOptionParser(optparse.OptionParser):
 class AliasPlugin(BeetsPlugin):
     """Support for beets command aliases, not unlike git."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name="alias"):
+        super().__init__(name)
 
         self.config.add(
             {
