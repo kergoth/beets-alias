@@ -15,7 +15,7 @@ import beets.plugins  # type: ignore
 import pytest
 from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
-from beets.plugins import send  # type: ignore
+from beets.plugins import send
 from beets.test.helper import TestHelper  # type: ignore
 from beets.ui import UserError  # type: ignore
 from confuse.exceptions import ConfigError  # type: ignore
