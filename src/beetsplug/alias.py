@@ -23,6 +23,9 @@ import subprocess
 import sys
 from collections import abc
 from concurrent.futures import ThreadPoolExecutor
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import confuse
 import six
@@ -41,9 +44,17 @@ EXIT_STATUS_DATABASE_CHANGED = 8
 class NoOpOptionParser(optparse.OptionParser):
     """A dummy option parser that doesn't do anything."""
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(
+        self, args: Optional[List[str]] = None, values: Optional[optparse.Values] = None
+    ) -> Tuple[optparse.Values, List[str]]:
         """Return the arguments and an empty list."""
-        return [], args
+        if args is None:
+            args = []
+        else:
+            args = args[:]
+        if values is None:
+            values = self.get_default_values()
+        return values, args
 
 
 class AliasPlugin(BeetsPlugin):
