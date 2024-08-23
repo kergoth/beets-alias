@@ -257,8 +257,7 @@ class ExternalCommand(AliasCommand):
 
     def run_command(self, lib, opts, command):
         """Run the external command."""
-        if command[0].startswith("!"):
-            command[0] = command[0][1:]
+        command[0] = command[0][1:]
         return check_call_redirected(command)
 
 
