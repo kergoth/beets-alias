@@ -1,6 +1,7 @@
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+/.venv/
 /.coverage
 /.coverage.*
 /.nox/
