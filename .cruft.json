@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/kergoth/cookiecutter-hypermodern-python",
-  "commit": "e81b945f1028259dd6ed3b9511de203872c83978",
+  "commit": "6a200bae022046ac1a1c56e6083146593ab4c371",
   "checkout": "beets-plugin",
   "context": {
     "cookiecutter": {
