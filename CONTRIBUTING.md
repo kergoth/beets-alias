@@ -11,7 +11,7 @@ Here is a list of important resources for contributors:
 - [Issue Tracker]
 - [Code of Conduct]
 
-[mit license]: https://opensource.org/licenses/MIT
+[mit license]: https://spdx.org/licenses/MIT
 [source code]: https://github.com/kergoth/beets-alias
 [documentation]: https://beets-alias.readthedocs.io/
 [issue tracker]: https://github.com/kergoth/beets-alias/issues
