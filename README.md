@@ -116,7 +116,7 @@ To learn more, see the [Contributor Guide].
 ## License
 
 Distributed under the terms of the [MIT license][license],
-_Alias Plugin for Beets_ is free and open source software.
+_Alias Plugin for Beets_ is free and open source software. This software prioritizes meeting the criteria of the [Ethical Source Principles][ethical source], though it does not currently utilize an [ethical source license][].
 
 ## Issues
 
@@ -131,6 +131,7 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 
 [@cjolowicz]: https://github.com/cjolowicz
 [hypermodern python cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
+[ethical source license]: https://ethicalsource.dev/faq/#what-is-an-ethical-license-for-open-source
 [file an issue]: https://github.com/kergoth/beets-alias/issues
 [contributors]: https://github.com/kergoth/beets-alias/graphs/contributors
 [beets]: https://beets.readthedocs.io/en/stable/index.html
