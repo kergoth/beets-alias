@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "beets-alias"
-version = "0.9.1"
+version = "0.9.2"
 description = "Alias Plugin for Beets"
 authors = ["Christopher Larson <kergoth@gmail.com>"]
 license = "MIT"
