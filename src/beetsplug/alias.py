@@ -28,7 +28,6 @@ from typing import Optional
 from typing import Tuple
 
 import confuse
-import six
 from beets import config
 from beets import plugins
 from beets import ui
@@ -119,7 +118,7 @@ class AliasPlugin(BeetsPlugin):
                     )
 
                 command = subview[alias].get()
-                if isinstance(command, six.text_type):
+                if isinstance(command, str):
                     commands[alias] = self.get_alias_subcommand(alias, command)
                 elif isinstance(command, abc.Mapping):
                     command_text = command.get("command")
