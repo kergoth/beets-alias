@@ -1,7 +1,7 @@
 {
-  "template": "/Volumes/Libraries/Music Library/src/cookiecutter-hypermodern-python",
+  "template": "https://github.com/kergoth/cookiecutter-hypermodern-python",
   "commit": "e81b945f1028259dd6ed3b9511de203872c83978",
-  "checkout": null,
+  "checkout": "beets-plugin",
   "context": {
     "cookiecutter": {
       "beets_plugin_name": "alias",
@@ -16,7 +16,7 @@
       "copyright_year": "2024",
       "license": "MIT",
       "development_status": "Development Status :: 4 - Beta",
-      "_template": "/Volumes/Libraries/Music Library/src/cookiecutter-hypermodern-python"
+      "_template": "https://github.com/kergoth/cookiecutter-hypermodern-python"
     }
   },
   "directory": null
