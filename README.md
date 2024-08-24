@@ -140,5 +140,6 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 
 <!-- github-only -->
 
-[license]: https://github.com/kergoth/beets-alias/blob/main/LICENSE
-[contributor guide]: https://github.com/kergoth/beets-alias/blob/main/CONTRIBUTING.md
+[license]: ./LICENSE
+[contributor guide]: ./CONTRIBUTING.md
+[contributor covenant]: ./CODE_OF_CONDUCT.md
