@@ -73,12 +73,19 @@ class AliasPlugin(BeetsPlugin):
         """Get the value of an environment variable."""
         return os.getenv(name, default)
 
-    def get_alias_subcommand(self, alias, command, help=None):
+    def get_alias_subcommand(self, alias, command, help=None, aliases=None):
         """Create a Subcommand instance for the specified alias."""
+        if aliases is None:
+            aliases = []
+
         if command.startswith("!"):
-            return ExternalCommand(alias, command, log=self._log, help=help)
+            return ExternalCommand(
+                alias, command, log=self._log, help=help, aliases=aliases
+            )
         else:
-            return BeetsCommand(alias, command, log=self._log, help=help)
+            return BeetsCommand(
+                alias, command, log=self._log, help=help, aliases=aliases
+            )
 
     def get_path_commands(self):
         """Create subcommands for beet-* scripts in $PATH."""
@@ -125,8 +132,9 @@ class AliasPlugin(BeetsPlugin):
                     if not command_text:
                         raise confuse.ConfigError(f"{path}.{alias}.command not found")
                     help_text = command.get("help", command_text)
+                    aliases = command.get("aliases")
                     commands[alias] = self.get_alias_subcommand(
-                        alias, command_text, help_text
+                        alias, command_text, help=help_text, aliases=aliases
                     )
                 else:
                     raise confuse.ConfigError(
@@ -148,10 +156,11 @@ class AliasPlugin(BeetsPlugin):
 class AliasCommand(Subcommand):
     """Base class for alias subcommands."""
 
-    def __init__(self, name, command, log, help=None):
+    def __init__(self, name, command, log, help=None, aliases=None):
         super().__init__(
             name,
             help=help or command,
+            aliases=aliases,
             parser=NoOpOptionParser(add_help_option=False, description=help or command),
         )
 

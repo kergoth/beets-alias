@@ -353,3 +353,22 @@ class AliasPluginTest(BeetsTestCase):
         self._setup_config({"from_path": False, "aliases": {"testalias": "testexit"}})
 
         self.run_with_output("testalias")
+
+    def test_alias_with_aliases(self) -> None:
+        """Test an alias with its own aliases."""
+        self._setup_config(
+            {
+                "from_path": False,
+                "aliases": {
+                    "hello": {
+                        "command": "!echo Hello",
+                        "help": "Say hello",
+                        "aliases": ["hi"],
+                    }
+                },
+            }
+        )
+        output = self.run_with_output("hello")
+        self.assertEqual(output, "Hello\n")
+        output = self.run_with_output("hi")
+        self.assertEqual(output, "Hello\n")
