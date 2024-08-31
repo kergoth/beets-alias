@@ -98,10 +98,18 @@ aliases:
   # command: beet "Synthie Pop" yello live
   # exapands to: beet modify -a yello live genre="Synthie Pop"
 
+  # Example alias with help and aliases
+  recent:
+    command: ls added-
+    help: List recent items
+    aliases: latest recents recent-items
+
   # Mac-specific
   picard:
     command: '!open -A -a "MusicBrainz Picard"'
     help: Open items in MusicBrainz Picard
+    aliases:
+      - musicbrainz-picard
 ```
 
 ## Using
