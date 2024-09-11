@@ -289,7 +289,10 @@ def redirect_output(p, stdfile, log):
 
 
 def check_call_redirected(*popenargs, **kwargs):
-    """Like subprocess.check_call, but redirects the output to sys.stdout/sys.stderr."""
+    """Like subprocess.check_call, but redirects the output to sys.stdout/sys.stderr.
+
+    This is used to ensure that we can capture the output in the tests.
+    """
     with subprocess.Popen(  # noqa: S603
         *popenargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, **kwargs
     ) as p:
