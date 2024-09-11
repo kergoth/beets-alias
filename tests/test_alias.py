@@ -13,7 +13,6 @@ from typing import Optional
 
 import beets.plugins  # type: ignore
 import pytest
-from beets.plugins import BeetsPlugin
 from beets.plugins import find_plugins
 from beets.plugins import send
 from beets.test.helper import TestHelper  # type: ignore
@@ -40,13 +39,12 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
         """Tear down test case."""
         self.teardown_beets()
 
-    def load_plugins(self, *plugins: str) -> List[BeetsPlugin]:
+    def load_plugins(self, *plugins: str) -> None:
         """Load and initialize plugins by names."""
         beets.plugins._instances.clear()
         beets.plugins._classes.clear()
         super().load_plugins(*plugins)
         send("pluginload")
-        return find_plugins()  # type: ignore
 
     def unregister_listener(self, event: str, func: Any) -> None:
         """Unregister a beets plugin event listener."""
@@ -105,8 +103,8 @@ class AliasPluginTest(BeetsTestCase):
 
     def load_plugin(self) -> None:
         """Load alias plugin."""
-        plugins = self.load_plugins("testplugin", "alias")
-        for plugin in plugins:
+        self.load_plugins("testplugin", "alias")
+        for plugin in find_plugins():
             if plugin.name == "alias":
                 self.plugin = plugin
                 break
