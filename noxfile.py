@@ -115,6 +115,10 @@ def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
 @session(name="pre-commit", python=python_versions[0])
 def precommit(session: Session) -> None:
     """Lint using pre-commit."""
+    gitdir = Path(".git")
+    if not gitdir.is_dir():
+        return
+
     args = session.posargs or [
         "run",
         "--all-files",
