@@ -12,7 +12,7 @@ import nox
 
 package = "beetsplug.alias"
 python_versions = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-nox.needs_version = ">= 2024.4.15"
+nox.needs_version = ">= 2026.4.10"
 nox.options.sessions = (
     "pre-commit",
     "pip-audit",
