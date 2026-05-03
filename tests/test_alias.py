@@ -9,24 +9,26 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-import beets.plugins  # type: ignore
+import beets.plugins
 import pytest
 from beets.plugins import find_plugins
 from beets.plugins import send
-from beets.test.helper import TestHelper  # type: ignore
-from beets.ui import UserError  # type: ignore
-from confuse.exceptions import ConfigError  # type: ignore
+from beets.test.helper import TestHelper
+from beets.ui import UserError
+from confuse.exceptions import ConfigError
 
 
 tests_path = Path(__file__).parent
 
 
-class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
+class BeetsTestCase(unittest.TestCase, TestHelper):
     """TestHelper based TestCase for beets."""
+
+    plugin: Any
 
     def setUp(self) -> None:
         """Set up test case."""
-        self.setup_beets()
+        self.setup_beets()  # type: ignore[no-untyped-call]
         self.config["pluginpath"] = [
             str(tests_path.parent / "src" / "beetsplug"),
             str(tests_path / "beetsplug"),
@@ -38,7 +40,7 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
         beets.plugins.BeetsPlugin.listeners.clear()
         beets.plugins.BeetsPlugin._raw_listeners.clear()
         beets.plugins._instances.clear()
-        self.teardown_beets()
+        self.teardown_beets()  # type: ignore[no-untyped-call]
 
     def load_plugins(self, *plugins: str) -> None:
         """Load and initialize plugins by names."""
@@ -54,7 +56,7 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
-            self.run_command(*args)
+            self.run_command(*args)  # type: ignore[no-untyped-call]
             return sys.stdout.getvalue()
         finally:
             sys.stdout = old_stdout

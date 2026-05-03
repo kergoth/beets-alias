@@ -138,6 +138,25 @@ def safety(session: nox.Session) -> None:
         external=True,
     )
     session.install("safety")
+    safety_api_key = os.getenv("SAFETY_API_KEY")
+    if safety_api_key:
+        session.run(
+            "safety",
+            "--key",
+            safety_api_key,
+            "scan",
+            "--target",
+            str(requirements.parent),
+            "--policy-file",
+            ".safety-policy.yml",
+            "--detailed-output",
+        )
+        return
+
+    session.warn(
+        "SAFETY_API_KEY is unset; using deprecated `safety check` "
+        "for unauthenticated local scans."
+    )
     session.run("safety", "check", "--full-report", f"--file={requirements}")
 
 
@@ -156,7 +175,7 @@ def mypy(session: nox.Session) -> None:
 def tests(session: nox.Session) -> None:
     """Run the test suite."""
     session.install(".")
-    session.install("coverage[toml]", "pytest", "pygments")
+    session.install("coverage[toml]", "pytest", "pygments", "responses")
     try:
         session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
     finally:
@@ -181,7 +200,7 @@ def coverage(session: nox.Session) -> None:
 def typeguard(session: nox.Session) -> None:
     """Runtime type checking using Typeguard."""
     session.install(".")
-    session.install("pytest", "typeguard", "pygments")
+    session.install("pytest", "typeguard", "pygments", "responses")
     session.run("pytest", f"--typeguard-packages={package}", *session.posargs)
 
 
