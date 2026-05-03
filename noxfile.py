@@ -15,7 +15,7 @@ python_versions = ["3.10", "3.11", "3.12", "3.13"]
 nox.needs_version = ">= 2024.4.15"
 nox.options.sessions = (
     "pre-commit",
-    "safety",
+    "pip-audit",
     "mypy",
     "tests",
     "typeguard",
@@ -124,40 +124,12 @@ def precommit(session: nox.Session) -> None:
         activate_virtualenv_in_precommit_hooks(session)
 
 
-@nox.session(python=python_versions[0])
-def safety(session: nox.Session) -> None:
-    """Scan dependencies for insecure packages."""
-    requirements = Path(session.cache_dir) / "requirements.txt"
-    session.run(
-        "uv",
-        "export",
-        "--no-dev",
-        "--no-hashes",
-        "-o",
-        str(requirements),
-        external=True,
-    )
-    session.install("safety")
-    safety_api_key = os.getenv("SAFETY_API_KEY")
-    if safety_api_key:
-        session.run(
-            "safety",
-            "--key",
-            safety_api_key,
-            "scan",
-            "--target",
-            str(requirements.parent),
-            "--policy-file",
-            ".safety-policy.yml",
-            "--detailed-output",
-        )
-        return
-
-    session.warn(
-        "SAFETY_API_KEY is unset; using deprecated `safety check` "
-        "for unauthenticated local scans."
-    )
-    session.run("safety", "check", "--full-report", f"--file={requirements}")
+@nox.session(name="pip-audit", python=python_versions[0])
+def pip_audit(session: nox.Session) -> None:
+    """Audit dependencies for known vulnerabilities."""
+    session.install(".")
+    session.install("pip-audit")
+    session.run("pip-audit", "--local")
 
 
 @nox.session(python=python_versions)
