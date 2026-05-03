@@ -23,9 +23,6 @@ import subprocess
 import sys
 from collections import abc
 from concurrent.futures import ThreadPoolExecutor
-from typing import List
-from typing import Optional
-from typing import Tuple
 
 import confuse
 from beets import config
@@ -44,8 +41,8 @@ class NoOpOptionParser(optparse.OptionParser):
     """A dummy option parser that doesn't do anything."""
 
     def parse_args(
-        self, args: Optional[List[str]] = None, values: Optional[optparse.Values] = None
-    ) -> Tuple[optparse.Values, List[str]]:
+        self, args: list[str] | None = None, values: optparse.Values | None = None
+    ) -> tuple[optparse.Values, list[str]]:
         """Return the arguments and an empty list."""
         if args is None:
             args = []

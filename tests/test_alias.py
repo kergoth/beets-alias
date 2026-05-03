@@ -1,15 +1,13 @@
 """Tests for the 'alias' plugin."""
 
+import io
 import os
 import sys
 import unittest
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import Generator
-from typing import List
-from typing import Optional
 
 import beets.plugins  # type: ignore
 import pytest
@@ -37,14 +35,29 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
 
     def tearDown(self) -> None:
         """Tear down test case."""
+        beets.plugins.BeetsPlugin.listeners.clear()
+        beets.plugins.BeetsPlugin._raw_listeners.clear()
+        beets.plugins._instances.clear()
         self.teardown_beets()
 
     def load_plugins(self, *plugins: str) -> None:
         """Load and initialize plugins by names."""
+        beets.plugins.BeetsPlugin.listeners.clear()
+        beets.plugins.BeetsPlugin._raw_listeners.clear()
         beets.plugins._instances.clear()
-        beets.plugins._classes.clear()
-        super().load_plugins(*plugins)
+        self.config["plugins"] = plugins
+        beets.plugins.load_plugins()
         send("pluginload")
+
+    def run_with_output(self, *args: str) -> str:
+        """Run a beets command and return its captured stdout."""
+        old_stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        try:
+            self.run_command(*args)
+            return sys.stdout.getvalue()
+        finally:
+            sys.stdout = old_stdout
 
     def unregister_listener(self, event: str, func: Any) -> None:
         """Unregister a beets plugin event listener."""
@@ -56,9 +69,9 @@ class BeetsTestCase(unittest.TestCase, TestHelper):  # type: ignore
     @contextmanager
     def assertFiresEvent(  # noqa: N802
         self, event: str, **event_args: Any
-    ) -> Generator[List[List[Any]], None, None]:
+    ) -> Generator[list[list[Any]], None, None]:
         """Assert that a beets plugin event is fired."""
-        events: List[List[Any]] = []
+        events: list[list[Any]] = []
 
         def event_func(event: str = event, **args: Any) -> None:
             events.append([event, args])
@@ -111,7 +124,7 @@ class AliasPluginTest(BeetsTestCase):
         else:
             self.fail("Plugin not loaded")
 
-    def _setup_config(self, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _setup_config(self, config: dict[str, Any] | None = None) -> dict[str, Any]:
         """Set up configuration."""
         if config is None:
             config = {
@@ -332,8 +345,9 @@ class AliasPluginTest(BeetsTestCase):
         self._setup_config({"from_path": False, "aliases": {"fail": "!false"}})
 
         event_args = {"alias": "fail", "command": ["false"], "exitcode": 1}
-        with self.assertRaises(SystemExit), self.assertFiresEvent(
-            "alias_failed", **event_args
+        with (
+            self.assertRaises(SystemExit),
+            self.assertFiresEvent("alias_failed", **event_args),
         ):
             self.run_with_output("fail")
 
@@ -341,8 +355,9 @@ class AliasPluginTest(BeetsTestCase):
         """Test triggering of database_change event."""
         self._setup_config({"from_path": False, "aliases": {"fail": "!sh -c 'exit 8'"}})
 
-        with self.assertRaises(SystemExit), self.assertFiresEvent(
-            "database_change", model=None
+        with (
+            self.assertRaises(SystemExit),
+            self.assertFiresEvent("database_change", model=None),
         ):
             self.run_with_output("fail")
 
