@@ -3,18 +3,21 @@
 Thank you for your interest in improving this project.
 This project is open-source under the [MIT license] and
 welcomes contributions in the form of bug reports, feature requests, and pull requests.
+It also aligns with the [Ethical Source Principles].
 
 Here is a list of important resources for contributors:
 
 - [Source Code]
 - [Documentation]
 - [Issue Tracker]
+- [Ethical Source Principles]
 - [Code of Conduct]
 
 [mit license]: https://spdx.org/licenses/MIT
 [source code]: https://github.com/kergoth/beets-alias
 [documentation]: https://beets-alias.readthedocs.io/
 [issue tracker]: https://github.com/kergoth/beets-alias/issues
+[ethical source principles]: https://ethicalsource.dev/principles/
 
 ## How to report a bug
 
