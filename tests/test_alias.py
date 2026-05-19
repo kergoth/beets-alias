@@ -56,7 +56,7 @@ class BeetsTestCase(unittest.TestCase, TestHelper):
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
-            self.run_command(*args)  # type: ignore[no-untyped-call]
+            self.run_command(*args)
             return sys.stdout.getvalue()
         finally:
             sys.stdout = old_stdout
